@@ -96,6 +96,13 @@ func readNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	if len(dataArray) == 0 {
+		log.Printf("[DEBUG] citrixadc-provider: Failed to find nsrpcnode %s", nsrpcnodeIpaddress)
+		log.Printf("[WARN] citrixadc-provider: Clearing nsrpcnode state %s", nsrpcnodeIpaddress)
+		d.SetId("")
+		return nil
+	}
+
 	if len(dataArray) != 1 {
 		return fmt.Errorf("[ERROR] Read multiple nsprcnode instances %v", dataArray)
 	}
