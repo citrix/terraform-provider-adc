@@ -1,6 +1,8 @@
 package citrixadc
 
 import (
+	"strings"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -145,7 +147,14 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRouteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	routeName := d.Id()
-
+	if routeName != "" {
+		ip_net_gate := strings.Split(routeName, "__")
+		if len(ip_net_gate) == 3 {
+			d.Set("network", ip_net_gate[0])
+			d.Set("netmask", ip_net_gate[1])
+			d.Set("gateway", ip_net_gate[2])
+		}
+	}
 	log.Printf("[DEBUG] citrixadc-provider: Reading route state %s", routeName)
 	findParams := service.FindParams{
 		ResourceType: service.Route.Type(),
@@ -223,7 +232,14 @@ func updateRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRouteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	routeName := d.Id()
-
+	if routeName != "" {
+		ip_net_gate := strings.Split(routeName, "__")
+		if len(ip_net_gate) == 3 {
+			d.Set("network", ip_net_gate[0])
+			d.Set("netmask", ip_net_gate[1])
+			d.Set("gateway", ip_net_gate[2])
+		}
+	}
 	route := network.Route{}
 	hasChange := false
 	if d.HasChange("advertise") {
