@@ -22,6 +22,11 @@ func dataSourceCitrixAdcNitroInfo() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"query_args": {
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 			"primary_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -78,6 +83,11 @@ func dataSourceCitrixAdcNitroInfoBindingListRead(d *schema.ResourceData, meta in
 	client := meta.(*NetScalerNitroClient).client
 	workflowMap := d.Get("workflow").(map[string]interface{})
 	primaryId := d.Get("primary_id").(string)
+	argsMap := make(map[string]string)
+	queryArgs := d.Get("query_args").(map[string]interface{})
+	for k, v := range queryArgs {
+		argsMap[k] = v.(string)
+	}
 	missingErrorCode, err := strconv.Atoi(workflowMap["bound_resource_missing_errorcode"].(string))
 	if err != nil {
 		return err
@@ -86,6 +96,7 @@ func dataSourceCitrixAdcNitroInfoBindingListRead(d *schema.ResourceData, meta in
 		ResourceType:             workflowMap["endpoint"].(string),
 		ResourceName:             primaryId,
 		ResourceMissingErrorCode: missingErrorCode,
+		ArgsMap:                  argsMap,
 	}
 
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -128,6 +139,11 @@ func dataSourceCitrixAdcNitroInfoObjectByNameRead(d *schema.ResourceData, meta i
 	client := meta.(*NetScalerNitroClient).client
 	workflowMap := d.Get("workflow").(map[string]interface{})
 	primaryId := d.Get("primary_id").(string)
+	argsMap := make(map[string]string)
+	queryArgs := d.Get("query_args").(map[string]interface{})
+	for k, v := range queryArgs {
+		argsMap[k] = v.(string)
+	}
 	missingErrorCode, err := strconv.Atoi(workflowMap["bound_resource_missing_errorcode"].(string))
 	if err != nil {
 		return err
@@ -136,6 +152,7 @@ func dataSourceCitrixAdcNitroInfoObjectByNameRead(d *schema.ResourceData, meta i
 		ResourceType:             workflowMap["endpoint"].(string),
 		ResourceName:             primaryId,
 		ResourceMissingErrorCode: missingErrorCode,
+		ArgsMap:                  argsMap,
 	}
 
 	dataArr, err := client.FindResourceArrayWithParams(findParams)

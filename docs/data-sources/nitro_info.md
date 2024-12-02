@@ -40,6 +40,23 @@ output "list_output" {
 output "object_output" {
     value = [ for item in data.citrixadc_nitro_info.sample.nitro_list: item.object ]
 }
+
+# Fetch the content of a file using query_args:
+data "citrixadc_nitro_info "my_file" {
+    workflow = {
+        lifecycle                        = "object_by_name"
+        endpoint                         = "systemfile"
+        bound_resource_missing_errorcode = "3441"
+    }
+    query_args = {
+        filename    = "my_file_name"
+        filecondent = urlencode("/my/file/path")
+    }
+}
+
+output "my_file" {
+    value = data.citrixadc_nitro_info.my_file.nitro_object.filecontent
+}
 ```
 
 ## Argument Reference
@@ -56,6 +73,7 @@ output "object_output" {
 
     A list of such workflows can be found in the github repository example folder for the `nitro_info` data source.
 
+* `query_args` - (Optional) A dictionary of query arguments that will be included when performing the request to the NITRO `endpoint` url.
 * `primary_id` - (Optional) Value for the primary id of the nitro endpoint.
 * `secondary_id` - (Optional) Value for the secondary id of the nitro endpoint.
 
