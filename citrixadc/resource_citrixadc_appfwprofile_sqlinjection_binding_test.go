@@ -72,6 +72,51 @@ const testAccAppfwprofile_sqlinjection_binding_basic = `
 	}
 `
 
+const testAccAppfwprofile_sqlinjection_binding_as_value_type_sql = `
+	resource citrixadc_appfwprofile_sqlinjection_binding demo_as_value_type_sql_binding {
+		name = citrixadc_appfwprofile.demo_appfw_as_value_type_sql.name
+		sqlinjection= "demo_binding"
+		as_scan_location_sql= "HEADER"
+		as_value_type_sql= "Keyword"
+		as_value_expr_sql= "example1"
+		formactionurl_sql= "www.example.com"
+		state= "ENABLED"
+		isregex_sql= "NOTREGEX"
+	}
+
+	resource citrixadc_appfwprofile demo_appfw_as_value_type_sql {
+		name = "demo_appfw_as_value_type_sql"
+		bufferoverflowaction = ["none"]
+		contenttypeaction = ["none"]
+		cookieconsistencyaction = ["none"]
+		creditcard = ["none"]
+		creditcardaction = ["none"]
+		crosssitescriptingaction = ["none"]
+		csrftagaction = ["none"]
+		denyurlaction = ["none"]
+		dynamiclearning = ["none"]
+		fieldconsistencyaction = ["none"]
+		fieldformataction = ["none"]
+		fileuploadtypesaction = ["none"]
+		inspectcontenttypes = ["none"]
+		jsondosaction = ["none"]
+		jsonsqlinjectionaction = ["none"]
+		jsonxssaction = ["none"]
+		multipleheaderaction = ["none"]
+		sqlinjectionaction = ["none"]
+		starturlaction = ["none"]
+		type = ["HTML"]
+		xmlattachmentaction = ["none"]
+		xmldosaction = ["none"]
+		xmlformataction = ["none"]
+		xmlsoapfaultaction = ["none"]
+		xmlsqlinjectionaction = ["none"]
+		xmlvalidationaction = ["none"]
+		xmlwsiaction = ["none"]
+		xmlxssaction = ["none"]
+	}
+`
+
 func TestAccAppfwprofile_sqlinjection_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -85,6 +130,17 @@ func TestAccAppfwprofile_sqlinjection_binding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", "name", "demo_appfwprofile"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", "as_scan_location_sql", "HEADER"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", "formactionurl_sql", "www.example.com"),
+				),
+			},
+			{
+				Config: testAccAppfwprofile_sqlinjection_binding_as_value_type_sql,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.demo_as_value_type_sql_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_as_value_type_sql_binding", "name", "demo_appfw_as_value_type_sql"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_as_value_type_sql_binding", "as_scan_location_sql", "HEADER"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_as_value_type_sql_binding", "formactionurl_sql", "www.example.com"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_as_value_type_sql_binding", "as_value_type_sql", "Keyword"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_as_value_type_sql_binding", "as_value_expr_sql", "example1"),
 				),
 			},
 		},
