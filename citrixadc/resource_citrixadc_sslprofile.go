@@ -90,6 +90,7 @@ type sslprofile struct {
 	Tls13sessionticketsperauthcontext int         `json:"tls13sessionticketsperauthcontext,omitempty"`
 	Zerorttearlydata                  string      `json:"zerorttearlydata,omitempty"`
 	Alpnprotocol                      string      `json:"alpnprotocol,omitempty"`
+	Nodefaultbindings                 string      `json:"nodefaultbindings,omitempty"`
 }
 
 func resourceCitrixAdcSslprofile() *schema.Resource {
@@ -414,6 +415,21 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"nodefaultecccurvebindings": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"nodefaultcipherbindings": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"nodefaultbindings": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			// sslprofile_ecccurve_binding
 			"ecccurvebindings": {
 				Type:     schema.TypeSet,
@@ -511,6 +527,7 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Tls13sessionticketsperauthcontext: d.Get("tls13sessionticketsperauthcontext").(int),
 		Zerorttearlydata:                  d.Get("zerorttearlydata").(string),
 		Alpnprotocol:                      d.Get("alpnprotocol").(string),
+		Nodefaultbindings:                 d.Get("nodefaultbindings").(string),
 	}
 
 	_, err := client.AddResource(service.Sslprofile.Type(), sslprofileName, &sslprofile)
@@ -520,6 +537,20 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(sslprofileName)
 
+	if val, ok := d.GetOk("nodefaultecccurvebindings"); ok && val.(bool) {
+		err = deleteDefaultSslprofileEcccurveBinding(d, meta)
+		if err != nil {
+			return err
+		}
+	}
+
+	if val, ok := d.GetOk("nodefaultcipherbindings"); ok && val.(bool) {
+		err = deleteDefaultSslprofileCipherBinding(d, meta)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Ignore bindings unless there is an explicit configuration for it
 	if _, ok := d.GetOk("ecccurvebindings"); ok {
 		err = createSslprofileEcccurveBindings(d, meta)
@@ -527,11 +558,14 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-
-	err = createSslprofileCipherBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("cipherbindings"); ok {
+		err = createSslprofileCipherBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
+
 	err = readSslprofileFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslprofile but we can't read it ?? %s", sslprofileName)
@@ -566,65 +600,65 @@ func readSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", data["name"])
 	d.Set("ciphername", data["ciphername"])
-	d.Set("cipherpriority", data["cipherpriority"])
+	setToInt("cipherpriority", d, data["cipherpriority"])
 	d.Set("cipherredirect", data["cipherredirect"])
 	d.Set("cipherurl", data["cipherurl"])
-	d.Set("cleartextport", data["cleartextport"])
+	setToInt("cleartextport", d, data["cleartextport"])
 	d.Set("clientauth", data["clientauth"])
 	d.Set("clientauthuseboundcachain", data["clientauthuseboundcachain"])
 	d.Set("clientcert", data["clientcert"])
 	d.Set("commonname", data["commonname"])
 	d.Set("denysslreneg", data["denysslreneg"])
 	d.Set("dh", data["dh"])
-	d.Set("dhcount", data["dhcount"])
+	setToInt("dhcount", d, data["dhcount"])
 	d.Set("dhekeyexchangewithpsk", data["dhekeyexchangewithpsk"])
 	d.Set("dhfile", data["dhfile"])
 	d.Set("dhkeyexpsizelimit", data["dhkeyexpsizelimit"])
 	d.Set("dropreqwithnohostheader", data["dropreqwithnohostheader"])
-	d.Set("encrypttriggerpktcount", data["encrypttriggerpktcount"])
+	setToInt("encrypttriggerpktcount", d, data["encrypttriggerpktcount"])
 	d.Set("ersa", data["ersa"])
-	d.Set("ersacount", data["ersacount"])
+	setToInt("ersacount", d, data["ersacount"])
 	d.Set("hsts", data["hsts"])
 	d.Set("includesubdomains", data["includesubdomains"])
 	d.Set("insertionencoding", data["insertionencoding"])
-	d.Set("maxage", data["maxage"])
+	setToInt("maxage", d, data["maxage"])
 	d.Set("name", data["name"])
 	d.Set("ocspstapling", data["ocspstapling"])
 	d.Set("preload", data["preload"])
-	d.Set("prevsessionkeylifetime", data["prevsessionkeylifetime"])
+	setToInt("prevsessionkeylifetime", d, data["prevsessionkeylifetime"])
 	d.Set("pushenctrigger", data["pushenctrigger"])
-	d.Set("pushenctriggertimeout", data["pushenctriggertimeout"])
-	d.Set("pushflag", data["pushflag"])
+	setToInt("pushenctriggertimeout", d, data["pushenctriggertimeout"])
+	setToInt("pushflag", d, data["pushflag"])
 	d.Set("quantumsize", data["quantumsize"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
 	d.Set("sendclosenotify", data["sendclosenotify"])
 	d.Set("serverauth", data["serverauth"])
-	d.Set("sessionkeylifetime", data["sessionkeylifetime"])
+	setToInt("sessionkeylifetime", d, data["sessionkeylifetime"])
 	d.Set("sessionticket", data["sessionticket"])
 	d.Set("sessionticketkeydata", data["sessionticketkeydata"])
 	d.Set("sessionticketkeyrefresh", data["sessionticketkeyrefresh"])
-	d.Set("sessionticketlifetime", data["sessionticketlifetime"])
+	setToInt("sessionticketlifetime", d, data["sessionticketlifetime"])
 	d.Set("sessreuse", data["sessreuse"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("skipclientcertpolicycheck", data["skipclientcertpolicycheck"])
 	d.Set("snienable", data["snienable"])
 	d.Set("snihttphostmatch", data["snihttphostmatch"])
 	d.Set("ssl3", data["ssl3"])
-	d.Set("sslimaxsessperserver", data["sslimaxsessperserver"])
+	setToInt("sslimaxsessperserver", d, data["sslimaxsessperserver"])
 	d.Set("sslinterception", data["sslinterception"])
 	d.Set("ssliocspcheck", data["ssliocspcheck"])
 	d.Set("sslireneg", data["sslireneg"])
 	d.Set("ssllogprofile", data["ssllogprofile"])
 	d.Set("sslprofiletype", data["sslprofiletype"])
 	d.Set("sslredirect", data["sslredirect"])
-	d.Set("ssltriggertimeout", data["ssltriggertimeout"])
+	setToInt("ssltriggertimeout", d, data["ssltriggertimeout"])
 	d.Set("strictcachecks", data["strictcachecks"])
 	d.Set("strictsigdigestcheck", data["strictsigdigestcheck"])
 	d.Set("tls1", data["tls1"])
 	d.Set("tls11", data["tls11"])
 	d.Set("tls12", data["tls12"])
 	d.Set("tls13", data["tls13"])
-	d.Set("tls13sessionticketsperauthcontext", data["tls13sessionticketsperauthcontext"])
+	setToInt("tls13sessionticketsperauthcontext", d, data["tls13sessionticketsperauthcontext"])
 	d.Set("zerorttearlydata", data["zerorttearlydata"])
 	d.Set("alpnprotocol", data["alpnprotocol"])
 
@@ -1136,6 +1170,46 @@ func deleteSingleSslprofileCipherBinding(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
+}
+
+func deleteDefaultSslprofileEcccurveBinding(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteDefaultSslprofileEcccurveBinding")
+	// Delete default ECCcurves being bound to SSLprofile
+
+	// get default Ecccurve bindings to the created SSLprofile
+	defaultEcccurves, err := getDefaultSslprofileEcccurveBindings(d, meta)
+	log.Printf("[DEBUG] citrixadc-provider: defaultSslprofileEcccurveBindings: %v", defaultEcccurves)
+	if err != nil {
+		return err
+	}
+
+	for _, ecccurvename := range defaultEcccurves {
+		deleteSingleSslprofileEcccurveBinding(d, meta, ecccurvename)
+	}
+
+	return nil
+
+}
+
+func deleteDefaultSslprofileCipherBinding(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteDefaultSslprofileCipherBinding")
+
+	// Delete the default ciphers being bound to SSLprofile by default
+
+	// Get the default ciphers from the created SSL Profile and delete them
+	defaultCipherBindings, err := getDefaultSslprofileCipherBindings(d, meta)
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] citrixadc-provider: defaultSslprofileCipherBindings: %v", defaultCipherBindings)
+	for _, binding := range defaultCipherBindings {
+		if err := deleteSingleSslprofileCipherBinding(d, meta, binding.(map[string]interface{})); err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }
 
 func addSingleSslprofileCipherBinding(d *schema.ResourceData, meta interface{}, binding map[string]interface{}) error {

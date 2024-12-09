@@ -15,6 +15,8 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 }
 ```
 
+~> **Note:** The following attributes are available for configuration and can be used to control the default bindings of ECC curve and cipher bindings. Detailed descriptions can be found in the `Argument Reference` section below:
+`nodefaultecccurvebindings`, `nodefaultcipherbindings`, `nodefaultbindings`
 
 ## Argument Reference
 
@@ -80,6 +82,9 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `ciphername` - (Optional) The cipher group/alias/individual cipher configuration.
 * `cipherpriority` - (Optional) cipher priority.
 * `strictsigdigestcheck` - (Optional) Parameter indicating to check whether peer entity certificate during TLS1.2 handshake is signed with one of signature-hash combination supported by Citrix ADC. Possible values: [ ENABLED, DISABLED ]
+* `nodefaultecccurvebindings` - (Optional) (bool) Set to `true` to unbind the default ECC curve, otherwise set to `false`. Possible values: [ true, false ]
+* `nodefaultcipherbindings` - (Optional) (bool) Set to `true` to unbind the default ciphers, otherwise set to `false`. Possible values: [ true, false ]
+* `nodefaultbindings` - (Optional) Set to "YES" to unbind both the default ECC curve and cipher, or "NO" to keep them bound. Possible values: [ "YES", "NO" ]
 * `ecccurvebindings` - (Required) A set of ECC curve names to be bound to this SSL profile. (deprecates soon)
 
 !>
